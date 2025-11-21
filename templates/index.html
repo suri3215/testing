@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BMI Calculator</title>
+    <style>
+      body { font-family: Arial, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
+      label { display:block; margin-top: 0.5rem; }
+      .row { display:flex; gap:0.5rem; }
+      .result { margin-top: 1rem; padding: 0.75rem; border: 1px solid #ddd; background:#f9f9f9; }
+    </style>
+  </head>
+  <body>
+    <h1>BMI Calculator</h1>
+    <form id="bmi-form">
+      <label>
+        Weight
+        <input type="number" step="any" name="weight" id="weight" required />
+      </label>
+      <label>
+        Weight unit
+        <select name="weight_unit" id="weight_unit">
+          <option value="kg">kg</option>
+          <option value="lb">lb</option>
+        </select>
+      </label>
+
+      <label>
+        Height unit
+        <select name="height_unit" id="height_unit">
+          <option value="m">meters</option>
+          <option value="cm">centimeters</option>
+          <option value="ft">feet/inches</option>
+        </select>
+      </label>
+
+      <div id="height-m" class="height-input">
+        <label>
+          Height
+          <input type="number" step="any" name="height" id="height" />
+        </label>
+      </div>
+
+      <div id="height-ft" class="height-input" style="display:none;">
+        <label class="row">
+          <span>Feet</span>
+          <input type="number" step="any" name="feet" id="feet" />
+          <span>Inches</span>
+          <input type="number" step="any" name="inches" id="inches" />
+        </label>
+      </div>
+
+      <button type="submit">Calculate</button>
+    </form>
+
+    <div id="result" class="result" style="display:none;"></div>
+
+    <script>
+      const heightUnit = document.getElementById('height_unit');
+      const heightM = document.getElementById('height-m');
+      const heightFt = document.getElementById('height-ft');
+
+      heightUnit.addEventListener('change', () => {
+        if (heightUnit.value === 'ft') {
+          heightM.style.display = 'none';
+          heightFt.style.display = 'block';
+        } else {
+          heightM.style.display = 'block';
+          heightFt.style.display = 'none';
+        }
+      });
+
+      document.getElementById('bmi-form').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const data = new FormData(ev.target);
+        const payload = {};
+        for (const [k, v] of data.entries()) payload[k] = v;
+
+        // If height unit isn't ft, ensure height is numeric
+        if (payload.height_unit !== 'ft') {
+          payload.height = parseFloat(payload.height || 0);
+        }
+
+        const res = await fetch('/api/bmi', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        const el = document.getElementById('result');
+        if (res.ok) {
+          el.style.display = 'block';
+          el.textContent = `BMI: ${result.bmi} — ${result.category}`;
+        } else {
+          el.style.display = 'block';
+          el.textContent = 'Error: ' + (result.error || 'Unknown error');
+        }
+      });
+    </script>
+  </body>
+</html>
