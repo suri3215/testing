@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, request, jsonify, render_template
 
 app = Flask(__name__)
@@ -77,5 +79,6 @@ def api_bmi():
 
 
 if __name__ == "__main__":
-    # Run in development mode; for production use a proper WSGI server
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    # Use the PORT environment variable when available (Render/Heroku style)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
